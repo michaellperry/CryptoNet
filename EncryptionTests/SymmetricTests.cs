@@ -12,7 +12,7 @@ namespace EncryptionTests
         [TestMethod]
         public void GenerateARandomAESKey()
         {
-            SymmetricAlgorithm aes = null;
+            SymmetricAlgorithm aes = new AesCryptoServiceProvider();
             aes.KeySize = 256;
 
             aes.Key.Length.Should().Be(32);     // 256 / 8
@@ -79,6 +79,15 @@ namespace EncryptionTests
         {
             MemoryStream memoryStream = new MemoryStream();
 
+            var cryptoStream = new CryptoStream(
+                memoryStream,
+                aes.CreateEncryptor(),
+                CryptoStreamMode.Write);
+            using (var writer = new StreamWriter(cryptoStream))
+            {
+                writer.Write(message);
+            }
+
             return memoryStream.ToArray();
         }
 
@@ -88,7 +97,14 @@ namespace EncryptionTests
             SymmetricAlgorithm provider = new AesCryptoServiceProvider();
             MemoryStream memoryStream = new MemoryStream(encryptedMessage);
 
-            return string.Empty;
+            var cryptoStream = new CryptoStream(
+                memoryStream,
+                provider.CreateDecryptor(key, iv),
+                CryptoStreamMode.Read);
+            using (var reader = new StreamReader(cryptoStream))
+            {
+                return reader.ReadToEnd();
+            }
         }
     }
 }
