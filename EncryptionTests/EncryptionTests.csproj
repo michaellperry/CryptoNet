@@ -60,6 +60,7 @@
   <ItemGroup>
     <Compile Include="SymmetricTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="AsymmetricTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
