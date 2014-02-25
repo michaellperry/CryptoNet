@@ -13,7 +13,7 @@ namespace EncryptionTests
         [TestMethod]
         public void GenerateAnRsaKeyPair()
         {
-            AsymmetricAlgorithm rsa = null;
+            AsymmetricAlgorithm rsa = new RSACryptoServiceProvider(2048);
 
             string encodedKey = rsa.ToXmlString(true);
 
@@ -23,9 +23,21 @@ namespace EncryptionTests
         }
 
         [TestMethod]
+        public void ShareAPublicKey()
+        {
+            AsymmetricAlgorithm rsa = new RSACryptoServiceProvider(2048);
+
+            string encodedKey = rsa.ToXmlString(false);
+
+            encodedKey.Should().Contain("<Modulus>");
+            encodedKey.Should().Contain("<Exponent>AQAB</Exponent>");
+            encodedKey.Should().NotContain("<D>");
+        }
+
+        [TestMethod]
         public void ExponentIsAlways65537()
         {
-            byte[] exponent = null;
+            byte[] exponent = Convert.FromBase64String("AQAB");
 
             exponent.Length.Should().Be(3);
             long number =
@@ -46,8 +58,8 @@ namespace EncryptionTests
 
             var aes = new AesCryptoServiceProvider();
             aes.KeySize = 256;
-            byte[] encryptedKey = null;
-            byte[] decryptedKey = null;
+            byte[] encryptedKey = publicKey.Encrypt(aes.Key, true);
+            byte[] decryptedKey = rsa.Decrypt(encryptedKey, true);
 
             Enumerable.SequenceEqual(
                 decryptedKey,
@@ -72,9 +84,10 @@ namespace EncryptionTests
             }
 
             var hashFunction = new SHA256CryptoServiceProvider();
-            byte[] signature = null;
+            byte[] signature = rsa.SignData(memory.ToArray(), hashFunction);
 
-            bool verified = false;
+            bool verified = publicKey.VerifyData(
+                memory.ToArray(), hashFunction, signature);
             verified.Should().BeTrue();
         }
     }
